@@ -161,10 +161,10 @@ process bwa_map {
     module load ${params.bwa}
     new_name=${specimen_id}_${params.run_id}_${lane}
 
-    bwa mem -M -t ${task.cpus} ${idxbase} ${paired_reads[0]} ${paired_reads[1]} > \${new_name}_PE_mapped.sam 2>  \${new_name}_PE_mapped_bwa_sorted.log
-    bwa mem -M -t ${task.cpus} ${idxbase} ${unpaired_reads[0]} > \${new_name}_UPF_mapped.sam 2>  \${new_name}_UPF_mapped_bwa_sorted.log
-    bwa mem -M -t ${task.cpus} ${idxbase} ${unpaired_reads[1]} > \${new_name}_UPR_mapped.sam 2>  \${new_name}_UPR_mapped_bwa_sorted.log
-    bwa mem -M -t ${task.cpus} ${idxbase} ${assembled_reads} > \${new_name}_SE_mapped.sam 2>  \${new_name}_SE_mapped_bwa_sorted.log
+    bwa mem -M -t ${task.cpus} ${idxbase} ${paired_reads[0]} ${paired_reads[1]} > \${new_name}_PE_mapped.sam 2>  \${new_name}_PE_mapped_bwa.log
+    bwa mem -M -t ${task.cpus} ${idxbase} ${unpaired_reads[0]} > \${new_name}_UPF_mapped.sam 2>  \${new_name}_UPF_mapped_bwa.log
+    bwa mem -M -t ${task.cpus} ${idxbase} ${unpaired_reads[1]} > \${new_name}_UPR_mapped.sam 2>  \${new_name}_UPR_mapped_bwa.log
+    bwa mem -M -t ${task.cpus} ${idxbase} ${assembled_reads} > \${new_name}_SE_mapped.sam 2>  \${new_name}_SE_mapped_bwa.log
     """
 }
 

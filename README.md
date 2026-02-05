@@ -234,39 +234,37 @@ The Illumina clipping parameters have been separated into logical components in 
 This structure provides flexibility to easily switch between different adapter sets (TruSeq, Nextera) without modifying the core pipeline code. All trimming logs are automatically captured and can be summarized using `multiqc` for quality assessment. Select the following parameters according to the library preparation kit used:
 
 - **TruSeq**
-  - "illumina_adapters": `/software/UHTS/Analysis/trimmomatic/0.36/adapters/TruSeq3-PE-2.fa`
+  - "illumina_adapters": `/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/museum/adapters/TruSeq3-PE-2.fa`
   - "illumina_clipping": `2:30:10:3:"true"`
 - **Nextera**
-  - "illumina_adapters": `/software/UHTS/Analysis/trimmomatic/0.36/adapters/NexteraPE-PE.fa`
+  - "illumina_adapters": `/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/museum/adapters/NexteraPE-PE.fa`
   - "illumina_clipping": `2:30:10:3:"true"`
 
 After trimming, 3 different set of reads are output:
   - `_{R1,R2}_paired.fastq.gz`: Refering to the forward and reverse PAIRED reads.
   - `_{R1,R2}_unpaired.fastq.gz`: Refering to the forward or reverse UNPAIRED reads.
-  - `_assembledTrim.fastq.gz`: Refering to the ovelaping reads that were assembled by `PEAR`
+  - `_assembledTrim.fastq.gz`: Refering to the ovelaping reads that were assembled by [`PEAR`](https://www.h-its.org/software/pear-paired-end-read-merger/)
   
 
 All trimmed `FASTQs` are renamed as `{specimen_id}_{run_id}_{lane}_{R1,R2}_{paired,unpaired,assembledTrim}.fastq.gz`, thus removing the random string stemming from the sequencer or demultiplexing scripts. The run ID should be the same for all FASTQs and is provided in the `params.json`.
 
-#### 5.3. Mapping
+#### 5.3. Mapping with bwa
 
-The mapping to the referent genome workflow consists of three integrated steps:
+The mapping to the reference genome is done using `bwa mem`.
 
-1. `bwa mem` aligns reads to the reference genome
-2. `samtools` adds read group metadata tags
-3. `picardtools` identifies and flags PCR duplicates
+The pipeline will output 4 BAM files corresponding to the different reads as follow:
 
-The pipeline will only output the BAM file with read groups (`<sample>_<seqrun>_<lane>_.bam`) and the marked duplicates (`<sample>_<seqrun>_<lane>_markdup.bam`).
+  - `_PE_mapped.sam`: mapping paired-end reads. 
+  - `_UPF_mapped.sam`: unpaired forward reads.
+  - `_UPR_mapped.sam`: unpaired reverse reads.
+  - `_SE_mapped.sam`: single-end reads refering to the overlaping-merged reads.
+
+The naming of the bam files follows the pattern:
+`{specimen_id}_{run_id}_{lane}_{PE,UPF,UPR,SE}_mapped.sam`
 
 
-  - `*{R1,R2}_PE_mapped.sam`: Refering to those forward and reverse paired 
-  - *_UPF_mapped.sam"), 
-  - path("*_UPR_mapped.sam"), 
-  - path("*_SE_mapped.sam".
-
-##### Adding read groups with samtools
-
-Proper read group assignment is critical for downstream analysis, particularly for `GATK` workflows. The pipeline implements a flexible read group tagging system where all critical metadata is dynamically assigned (see [read group extraction](#51-read-group-extraction)):
+#### 5.4 Adding read groups with samtools
+The pipeline implements a flexible read group tagging system where all critical metadata is dynamically assigned (see [read group extraction](#51-read-group-extraction)):
 
 |Tag | Description           | Source                   |
 |----|-----------------------|--------------------------|
@@ -278,104 +276,59 @@ Proper read group assignment is critical for downstream analysis, particularly f
 |`PM`|Platform model         |Provided in `params.json` |
 |`SM`|Sample name            |FASTQ metadata extraction |
 
-*Note:* The current implementation assumes all samples were sequenced using the same platform (e.g. Illumina NovaSeqX at our GTF center) with the same library preparation kit (Nextera). For studies **combining data from multiple sequencing platforms or centers**, process the samples per sequencing batch.
+*Note:* The current implementation assumes all samples were sequenced using the same platform (e.g. Illumina NovaSeqX) with the same library preparation kit (Nextera). For studies **combining data from multiple sequencing platforms or centers**, process the samples per sequencing batch.
 
-##### Mark duplicates
+#### 5.5 Sorting bams with samtools
 
-This pipeline uses Picard `MarkDuplicates` instead of `MarkDuplicatesSpark` (usually applied by the group). The Spark version caused frequent errors in Nextflow environments. This change affects only processing speed and resource usage, not the biological results—both tools use identical duplicate identification algorithms.
+To be able to combine all BAM files that belong to the same library, we first sort the alignments by leftmost coordinates, using `samtools sort`, generating BAM files with named `{specimen_id}_{run_id}_{lane}_{PE,UPF,UPR,SE}_sorted.sam`.
 
-#### 5.4. Quality Control
+#### 5.6 Merging bams with samtools
+
+The previously sorted BAM files produced from the same library:
+`{_PE_sorted.bam}`, `{_UPF_sorted.bam}`, `{_UPR_sorted.bam}` and `{_SE_sorted.bam}`.
+
+are merged into a single file called `{specimen_id}_{run_id}_{lane}_mapped.sam`
+
+#### 5.7 Mark duplicates
+
+This pipeline uses Picard `MarkDuplicates` to identify and flags PCR duplicates.
+
+The output BAM file follows the pattern: `{specimen_id}_${run_id}_${lane}_marked.bam`
+
+#### 5.8. Quality Control
 
 The pipeline includes automated quality checks at key stages:
 
 - Raw read counting
 - `FastQC`: Raw and trimmed read quality assessment
 - `Trimmomatic`: Trimming statistics and adapter removal metrics
-- `GATK MarkDuplicates`: Duplicate rate and library complexity
+- `Picard MarkDuplicates`: Duplicate rate and library complexity
 - `Qualimap`: Coverage distribution and mapping quality on final BAMs
 - `MultiQC`: Aggregated summary of all QC metrics
 
-#### 5.5. Sex assignment based on genomic coverage stats
+#### 5.9. Sex assignment based on genomic coverage stats
 
-Sex determination is needed for genomic imputation with `glimpse`. More specifically, it informs ploidy settings for `bcftools call`. Since field-collected metadata may be missing or unreliable, we infer sex computationally using genomic coverage statistics. Currently, this process is implemented in the `assign_sex.py` script, which is specifically designed for the *Tyto alba* 2020 reference genome.
+Sex determination can be infered computationally using genomic coverage statistics. Currently, this process is implemented in the `assign_sex.py` script, which is specifically designed for the *Tyto alba* 2020 reference genome. The sex is infered using coverage statistic of superscaffold 13 as it has been identified as the sex linkage group in *Tyto alba*. However, given that the museum samples represent several different species, it is important to keep in mind that the sex chromosomes of species other than _T.alba_ could be different to that of the reference genome.
 
-The script requires two inputs: **(1)** coverage statistics generated by `samtools coverage`, and **(2)** a reference genome identifier (e.g., "2020"). When the 2020 genome is specified, the script calculates the mean coverage depth of the sex chromosome (scaffold 13) relative to autosomes (excluding scaffolds 13 and 42). Females are identified by a lower sex-chromosome coverage ratio (expected ~0.5X due to ZZ/ZW heterogamety), while males show roughly equal coverage (homogametic, ~1X). The **current threshold is set to 0.65**, following analyses for sexing low coverage individuals in Eleonor's thesis (p. 274). Scaffold 42 is excluded from calculations due to its pseudoautosomal region (PAR), which could skew coverage-based sex determination.
+The script requires two inputs: **(1)** coverage statistics generated by `samtools coverage`, and **(2)** a reference genome identifier (e.g., "2020"). When the 2020 genome is specified, the script calculates the mean coverage depth of the sex chromosome (scaffold 13) relative to autosomes (excluding scaffold 42). Females are identified by a lower sex-chromosome coverage ratio (expected ~0.5X due to ZZ/ZW heterogamety), while males show roughly equal coverage (homogametic, ~1X). The **current threshold is set to 0.65**, following analyses for sexing low coverage individuals in Eleonor's thesis (p. 274). Scaffold 42 is excluded from calculations due to its pseudoautosomal region (PAR), which could skew coverage-based sex determination.
 
-The script outputs a tab-delimited file (SAMPLE\tSEX) for each individual. These files are used directly in the variant calling pipeline and later aggregated into a metadata table, which will also be used for the database.
+The script outputs a tab-delimited file (SAMPLE\tSEX) for each individual. 
 
 💡 Future updates to the reference genome  will require modifications to the script. This includes adding new reference genome identifiers (e.g., "2025") and adjusting chromosome or scaffold names if they differ from the 2020 assembly. The logic for sex determination, however, will remain consistent—only the genomic coordinates and thresholds may need refinement.
 
-#### 5.6. BAM List Output
+#### 5.10. BAM List Output
 
-The pipeline generates `bamlist_runIdGTF_2720.tsv`, a tab-separated file listing all BAMs produced:
+The pipeline generates `bamlist_runId.tsv`, a tab-separated file listing all BAMs produced:
 
-| RingID     | Specimen ID   | Lane | BAM file                         |
+| Sample_ID     | Specimen_ID   | Lane | BAM file                         |
 |------------|---------------|------|----------------------------------|
-| M026442    | M026442_3_3H  | L6   | M026442_3_3H_2720_L6_markdup.bam |
-| **M038060**| M038060_5_12D | L6   | M038060_5_12D_2720_L6_markdup.bam|
-| **M038060**| M038060_3_8B  | L6   | M038060_3_8B_2720_L6_markdup.bam |
+T.nig.sp.IDN_44282    |  Tn_44282    |    L6   |   Tn_44282_Germany_2025_4th_L6_marked.bam
+T.jav.del.WSM_23135   |  Tad_23135   |    L7   |   Tad_23135_Germany_2025_4th_L7_marked.bam
+T.fur.pra.DOM_16499   |  Tfp_16499   |    L7   |   Tfp_16499_Germany_2025_4th_L7_marked.bam
 
-This file enables merging of BAMs from the same individual across different lanes, runs, or libraries (e.g. *M038060*). See [Merging BAMs](#merging-bams) in the next section for database-compatible merge guidelines.
+This file enables merging of BAMs from the same individual across different lanes, runs, or libraries. See [Merging BAMs](https://github.com/JGoudetGroup/fastq2bam?tab=readme-ov-file#merging-bams) section in the fastq2bam file pipeline for database-compatible merge guidelines.
 
-## Additional scripts & tools
-
-### Merging BAMs
-
-Example script from the 3000 owls survival project (/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/) for merging BAMs from the same individual across different libraries. It is important to keep track of the files merged together for the databse. The code snippets here generate a table to conduct the merging, as well as a dataframe collecting the input and output of this merging process.
-
-```python
-import pandas as pd
-
-# Path to the TSV file output by the fastq2bam pipeline containing the list of BAM files for low coverage individuals 
-fastq2bam_out = '/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/1_TrimmAlign/data/bamlist_runIdGTF_2720.tsv'
-
-# Load the file
-fastq2bam_df = pd.read_csv(fastq2bam_out, sep = '\t', header = None)
-fastq2bam_df.rename(columns = {0:'source_organism_id', 
-                               1:'lib_id', 
-                               2: 'lane', 
-                               3: 'file'
-                               }, inplace = True)
-duplicates = fastq2bam_df[fastq2bam_df['source_organism_id'].duplicated(keep=False)]
-duplicates['file'] = '/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/1_TrimmAlign/data/2.mapped/' + duplicates['file']
-
-pairs = []
-
-for source_id, group in duplicates.groupby('source_organism_id'):
-    # Get all rows for this source_organism_id
-    rows = group.reset_index(drop=True)
-    
-    # Create pairs (assuming you want all pairwise combinations)
-    for i in range(len(rows)):
-        for j in range(i + 1, len(rows)):
-            pairs.append({
-                'source_organism_id': source_id,
-                'lib_id1': rows.loc[i, 'lib_id'],
-                'lib_id2': rows.loc[j, 'lib_id'],
-                'file1': rows.loc[i, 'file'],
-                'file2': rows.loc[j, 'file']
-            })
-
-# Create the result DataFrame
-paired = pd.DataFrame(pairs)
-
-paired['bam_id'] = paired['source_organism_id'] + '_20250915'
-paired['bam'] = '/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/1_TrimmAlign/data/3.merged/' + paired['bam_id'] + '_markdup.bam'
-
-# print a table to keep track of merged samples
-paired[['source_organism_id', 'lib_id1', 'lib_id2', 'bam_id']].to_csv('/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/1_TrimmAlign/data/DB_merged_samples.tsv', sep = '\t', index = False, header = True)
-
-# print a table to help merging the BAMs
-paired[[ 'bam', 'file1', 'file2']].to_csv('/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/1_TrimmAlign/data/merging.tsv', sep = '\t', index = False, header = False)
-```
-
-Merging can then be executed with a simple loop either in an interactive node or a slurm job depending on the number of samples:
-
-```bash
-while read i; do eval "samtools merge $i"; done < merging.tsv
-```
-
-### Collect metadata for the database
+### Collected metadata for the database
 
 - Genetic sex
 - Read count (FASTQ)
@@ -383,30 +336,6 @@ while read i; do eval "samtools merge $i"; done < merging.tsv
 
 ### Gather QC for lab feedback
 
-### Test dataset
-
-- generating test datasets
-
-```bash
-cd data/
-
-# Raw data directory
-DIR="/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/survival/0_RawData"
-# Grab names of files, removing the CTRL directory
-ls $DIR | tail -n +2 > survival_fastq_list.txt
-
-# get paths of selected IND
-cat pheno_male_subsample.txt pheno_female_subsample.txt > subsample.txt
-grep -f subsample.txt survival_fastq_list.txt > subsample_fastq.txt
-rm subsample.txt
-
-Sinteractive
-module load seqtk
-while read i; do
-    eval "zcat "${DIR}${i}" | seqtk sample -s100 - 1000 | gzip > "FASTQ/${i}""
-done < subsample_fastq.txt
-```
-
 ### BAM2CRAM
 
-For compressing BAMs that will not be used in the near future.
+For compressing BAMs that will not be used in the near future and to be stored in `/nas/D1c`.
