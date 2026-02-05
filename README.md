@@ -326,7 +326,7 @@ T.nig.sp.IDN_44282    |  Tn_44282    |    L6   |   Tn_44282_Germany_2025_4th_L6_
 T.jav.del.WSM_23135   |  Tad_23135   |    L7   |   Tad_23135_Germany_2025_4th_L7_marked.bam
 T.fur.pra.DOM_16499   |  Tfp_16499   |    L7   |   Tfp_16499_Germany_2025_4th_L7_marked.bam
 
-This file enables merging of BAMs from the same individual across different lanes, runs, or libraries. See [Merging BAMs](https://github.com/JGoudetGroup/fastq2bam?tab=readme-ov-file#merging-bams) section in the fastq2bam file pipeline for database-compatible merge guidelines.
+This file enables merging of BAMs from the same individual across different lanes, runs, or libraries. See [Merging BAMs](https://github.com/JGoudetGroup/fastq2bam?tab=readme-ov-file#merging-bams) section in the fastq2bam pipeline for database-compatible merge guidelines.
 
 ### Collected metadata for the database
 
