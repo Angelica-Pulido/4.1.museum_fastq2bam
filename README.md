@@ -3,7 +3,7 @@
 This is a workflow for museum samples that automates processing of raw Illumina (short-reads) sequencing data from FASTQ to analysis-ready BAM files. This workflow was created following the original [fastq2bam](https://github.com/JGoudetGroup/fastq2bam?tab=readme-ov-file#) workflow developed by [Marianne Bachmann](https://github.com/m-bachmann), implementing a few modifications relevant to museum samples.
 
 
-This workflow evaluates and trims raw illumina reads, identifying paired- an unpaired-R1 and -R2 reads, as well as merging overlapping-reads (a common outcome of short fragment sizes occurring in degraded DNA). Trimmed reads are mapped to a reference genome with proper read group tags added. Bam files obtained from the same library are are merged generating a single `_mapped.bam` file. Finally, duplicates are marked resulting in a sorted analysis-ready `_marked.bam` file per library.
+This workflow evaluates and trims raw illumina reads, identifying `paired-` an `unpaired-R1` and `-R2` reads, as well as merging overlapping-reads (a common outcome of short fragment sizes occurring in degraded DNA). Trimmed reads are mapped to a reference genome with proper read group tags added. Bam files obtained from the same library are merged generating a single `_mapped.bam` file. Finally, duplicates are marked resulting in a sorted analysis-ready `_marked.bam` file per library.
 
 The pipeline also allows for quality control at each processing step from raw read assessment to the final duplicated-marked bam files, generating comprehensive QC reports and aggregating them via MultiQC.
 
