@@ -1,5 +1,7 @@
 # fastq2bam_museum
 
+![workflow](museum_fastq2bam.drawio.svg)
+
 This is a workflow for museum samples that automates processing of raw Illumina (short-reads) sequencing data from FASTQ to analysis-ready BAM files. This workflow was created following the original [fastq2bam](https://github.com/JGoudetGroup/fastq2bam?tab=readme-ov-file#) workflow developed by [Marianne Bachmann](https://github.com/m-bachmann), implementing a few modifications relevant to museum samples.
 
 
