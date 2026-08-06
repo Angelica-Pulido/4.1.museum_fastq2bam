@@ -62,7 +62,7 @@ Path to the reference genome's `FASTA` file, where all the corresponding indexes
 
 #### 2.3 Adapter file
 
-File containing a list of library adapters to remove using `trimmomatic`. See the [trimming](#52-trimming) section for more details.
+File containing a list of library adapters to remove using `trimmomatic`. See the [trimming](#5.3.) section for more details.
 
 #### 2.4 Scaffolds file
 
@@ -72,11 +72,11 @@ The [scaffolds bed file](lists/lg_scaffolds.bed) provided to `qualimap` consists
 
 #### 3.1 `museum_fastq2bam_params.json`
 
-Below you can find the description of the parameters required in the [`museum_fastq2bam_params.json`](museum_fastq2bam_Germany_4th.samples_params.json) file:
+Below you can find the description of the parameters required in the [`museum_fastq2bam_params.json`](museum_fastq2bam_params.json) file:
 
 |Parameter          | Description                                                                |Example                                   |
 |-------------------|----------------------------------------------------------------------------|------------------------------------------|
-|`input`            |Path to the CSV file listing all `FASTQ` files.                       | [example_fastq.csv](lists/museum_short.reads_2025_4th.samples.Germany.csv)|
+|`input`            |Path to the CSV file listing all `FASTQ` files.                       | [example_fastq.csv](lists/modern.museum_short.reads_2025_4th.samples.Germany.csv)|
 |`bin_dir`          |Path to auxiliary scripts.                                                  |`"${projectDir}/bin"`                       |
 |`result_dir`       |Path to the results directory.                                              |`"/work/user/project/1_Reads2Bam"`         |
 |`scratch_dir`      |Path for intermediate or temporary files.                                   |`"/scratch/user/project/fastq2bam/scratch"` |
@@ -99,7 +99,7 @@ Below you can find the description of the parameters required in the [`museum_fa
 |`python_venv`      |Path to the pipeline's Python virtual environment.                         |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/venv/biopython/bin/activate"`|
 |`phred`            |`trimmomatic`: base quality encoding.                                      |`"phred33"`|
 |`illumina_adapters`|`trimmomatic`: path to Illumina adapters.                                  |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/apulido/TOOLS/adapters/TruSeq3_NOVOGENE.fa"`|
-|`illumina_clipping`|`trimmomatic`: [clipping parameters](#trimming).                           |`"2:30:10:3:70:true"`|
+|`illumina_clipping`|`trimmomatic`: [clipping parameters](#5.3trimming).                           |`"2:30:10:3:70:true"`|
 |`min_read_length`  |`trimmomatic`: minimum read length.                                          |`"70"`|
 |`ref_genome`       |`bwa`: path to the reference genome FASTA.                                 |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/ref_genome_2020/Tyto_reference_Jan2020.fasta"`|
 |`ref_genome_version` |`sex_assignment`: version of the genome assembly selected                                  | `"2020"`|
