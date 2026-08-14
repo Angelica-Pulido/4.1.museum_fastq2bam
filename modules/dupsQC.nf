@@ -18,6 +18,7 @@ process dups_multiQC {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.python}
     source ${params.python_venv}
     multiqc -n 5_dups_multiqc .

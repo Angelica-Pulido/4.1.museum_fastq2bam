@@ -19,6 +19,7 @@ process qualimap {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.gcc} ${params.openjdk} ${params.qualimap}
     new_name=${specimen_id}_${params.run_id}_${lane}
     export JAVA_OPTS="-Xmx${task.memory.giga}G"
@@ -47,6 +48,7 @@ process qualimap_multiQC {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.python}
     source ${params.python_venv}
     multiqc -n 4_bamqc_multiqc .

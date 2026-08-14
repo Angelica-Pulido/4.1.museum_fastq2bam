@@ -18,6 +18,7 @@ process pretrimQC {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.fastqc}
     fastqc --noextract ${r1} ${r2} 
     """
@@ -44,6 +45,7 @@ process pretrim_multiQC {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.python}
     source ${params.python_venv}
     multiqc -n 0_pretrim_multiqc .

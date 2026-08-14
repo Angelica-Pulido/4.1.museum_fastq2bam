@@ -18,6 +18,7 @@ process trim_stats {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.python}
     source ${params.python_venv}
     multiqc -n trim_multiqc .

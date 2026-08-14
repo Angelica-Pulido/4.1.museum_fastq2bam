@@ -2,6 +2,9 @@
 
 """
 Determine individual's sex based on genomic coverage stats.
+
+Usage:
+    python assign_sex.py --source_organism_id ${source_organism_id} --bam_id ${bam_id} --coverage ${coverage} --ref-version ${params.ref_genome_version}
 """
 
 # Import necessary libraries
@@ -35,7 +38,7 @@ if bam_id is None:
 if cov is None:
     raise RuntimeError("Error! no coverage file provided (--coverage)")
 if refg is None:
-    raise RuntimeError("Error! no reference genome version provided (--refref-version)")
+    raise RuntimeError("Error! no reference genome version provided (--ref-version)")
 
 
 def ref2020(cov):
@@ -63,6 +66,32 @@ def ref2020(cov):
     return(indsex)
 
 
+def ref2026(cov):
+    """
+    Determine sex based on coverage depth using Tyto alba's 2026 father assembly.
+    
+    Parameters:
+        cov (DataFrame): Coverage stats loaded from file.
+        
+    Returns:
+        str: 'M' for male, 'F' for female.
+    """
+    # Get mean depth for the sex chromosome
+    chr_z_depth = cov[cov['#rname'] == 'Fa_chrZ']['meandepth'].mean()
+    # Filter out sex chromosome, PAR region can be ignored
+    cov_autosomal = cov[~cov['#rname'].isin(['Fa_chrZ'])]
+    # Compute average autosomal depth
+    autosomal_depth = cov_autosomal['meandepth'].mean()
+    # Compute depth ratio between sex chromosome and autosomes
+    depth_ratio = chr_z_depth/autosomal_depth
+    if depth_ratio > 0.7:
+        indsex = 'M'
+    else:
+        indsex = 'F'
+    return(indsex)
+
+
+
 def main(ringID, bamid, cov_file, ref):
     """
     Main function to process coverage file and determine sex.
@@ -73,15 +102,17 @@ def main(ringID, bamid, cov_file, ref):
     """
     # Load coverage data
     cov = pd.read_csv(cov_file, sep = "\t", header = 0)
-  
+ 
     # Determine sex based on reference genome
     if ref == "2020":
         sex = ref2020(cov)
+    elif ref == "2026":
+        sex = ref2026(cov)
     else:
         # Placeholder for handling other reference genomes
         sex = "NA"
-    # Write output to a TSV file
-    with open(bamid + "_ind_sex.tsv", "w") as f:
+    # Write output to a space-separated file
+    with open(bamid + "_ind_sex.ssv", "w") as f:
         f.write(f"{ringID} {sex}\n")
 
 

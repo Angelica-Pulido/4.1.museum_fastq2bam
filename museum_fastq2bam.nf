@@ -17,6 +17,7 @@ process getRG {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.python}
     source ${params.python_venv}
     ${params.bin_dir}/rg_parser.py --source_organism_id ${source_organism_id} --specimen_id ${specimen_id} --run_id ${params.run_id} --lane ${lane} --r1 ${r1}
@@ -43,6 +44,7 @@ process merge_overlaping_reads {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     new_name=${specimen_id}_${params.run_id}_${lane}
 
     ${params.bin_dir}/${params.pear} \\
@@ -77,6 +79,7 @@ process trim_PE {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load  ${params.trimmomatic}
     new_name=${specimen_id}_${params.run_id}_${lane}
 
@@ -111,6 +114,7 @@ process trim_SE {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load  ${params.trimmomatic}
     new_name=${specimen_id}_${params.run_id}_${lane}
     
@@ -158,6 +162,7 @@ process bwa_map {
         def idxbase = ref_index[0].baseName
         // NOTE!!!: why not putting the ref fasta file instead of the index base?
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.bwa}
     new_name=${specimen_id}_${params.run_id}_${lane}
 
@@ -187,6 +192,7 @@ process read_groups {
     script: 
     
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.samtools}
 
     new_name=${specimen_id}_${params.run_id}_${lane}
@@ -263,6 +269,7 @@ process sortbam {
     script: 
     
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.samtools}
     new_name=${specimen_id}_${params.run_id}_${lane}
 
@@ -291,6 +298,7 @@ process merge_bams {
     script: 
     
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.samtools}
 
     new_name=${specimen_id}_${params.run_id}_${lane}
@@ -328,7 +336,7 @@ process markdup {
 
     script:     
     """
-    
+    dcsrsoft use ${params.softstack}
     
     module load ${params.gcc} ${params.picard} ${params.samtools}
     
@@ -359,6 +367,7 @@ process outtsv {
 
     script:     
     """
+    dcsrsoft use ${params.softstack}
     cat $tsvs > bamlist_${params.run_id}.tsv
     """
 }

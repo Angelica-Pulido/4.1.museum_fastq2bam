@@ -16,6 +16,7 @@ process posttrimQC_PE {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.fastqc}
     fastqc --noextract ${paired} ${unpaired}
     """
@@ -45,6 +46,7 @@ process posttrimQC_SE {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.fastqc}
     fastqc --noextract ${assembledTrim}
     """
@@ -77,6 +79,7 @@ process posttrim_multiQC {
 
     script:
     """
+    dcsrsoft use ${params.softstack}
     module load ${params.python}
     source ${params.python_venv}
     multiqc -n 2_posttrim_multiqc .
