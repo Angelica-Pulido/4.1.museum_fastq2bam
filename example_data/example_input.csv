@@ -1,4 +1,4 @@
 source_organism_id,specimen_id,lane,R1,R2
-T.lon.chi.CHN_9579,Tlc_9579,L7,/scratch/apulido1/museum_short.reads_2025_4th.samples.Germany/fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_23FT27LT4_L7_1.fq.gz,/scratch/apulido1/museum_short.reads_2025_4th.samples.Germany/fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_23FT27LT4_L7_2.fq.gz
-T.lon.chi.CHN_9579,Tlc_9579,L1,/scratch/apulido1/museum_short.reads_2025_4th.samples.Germany/fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_235LFNLT4_L1_1.fq.gz,/scratch/apulido1/museum_short.reads_2025_4th.samples.Germany/fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_235LFNLT4_L1_2.fq.gz
+T.lon.chi.CHN_9579,Tlc_9579,L7,/scratch/apulido1/museum_fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_23FT27LT4_L7_1.fq.gz,/scratch/apulido1/museum_fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_23FT27LT4_L7_2.fq.gz
+T.lon.chi.CHN_9579,Tlc_9579,L1,/scratch/apulido1/museum_fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_235LFNLT4_L1_1.fq.gz,/scratch/apulido1/museum_fastq2bam/fastq_files/Tlc_9579_MKDN250052932-1A_235LFNLT4_L1_2.fq.gz
 

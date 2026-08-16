@@ -148,7 +148,7 @@ process bwa_map {
     scratch params.scratch_dir // use $TMPDIR for I/O intensive tasks
     // this does not need to be published; uncomment otherwise
     // publishDir "$params.result_dir/2_mapped", mode: params.publish, pattern: "*.sam"
-    publishDir "$params.result_dir/QC/3_bwalogs", mode: params.publish, pattern: "*_bwa_sorted.log"
+    publishDir "$params.result_dir/QC/3_bwalogs", mode: params.publish, pattern: "*_bwa.log"
 
     input: 
         tuple val(source_organism_id), val(specimen_id), val(lane), path(paired_reads), path(unpaired_reads), path(assembled_reads)
@@ -156,7 +156,7 @@ process bwa_map {
 
     output: 
         tuple val(source_organism_id), val(specimen_id), val(lane), path("*_PE_mapped.sam"), path("*_UPF_mapped.sam"), path("*_UPR_mapped.sam"), path("*_SE_mapped.sam"), emit: aln
-        path("*_bwa_sorted.log"), emit: log   
+        path("*_bwa.log"), emit: log   
         // test and report the type of output
     script: 
         def idxbase = ref_index[0].baseName
