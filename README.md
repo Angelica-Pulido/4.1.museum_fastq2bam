@@ -10,9 +10,9 @@ This workflow evaluates and trims raw illumina reads, identifying `paired-` an `
 The pipeline also allows for quality control at each processing step from raw read assessment to the final duplicated-marked bam files, generating comprehensive QC reports and aggregating them via MultiQC.
 
 ## New in Version 2.0.0
-- DCSR has updated their software stack, to be able to determine which software stack to use now the parameter file [(_params.json)](museum_fastq2bam_params.json) allows to specify the softstack you require.
+- DCSR has updated their software stack, to be able to determine which software stack to use now the parameter file ([_params.json](museum_fastq2bam_params.json)) allows to specify the softstack you require.
 - All processes have been adapted, either in the main.nf or in modules, to call the corresponding software stack.
-- The config file [(.config)](museum_fastq2bam.config) also adds a process-level directive so every job: Runs the dcsrsoft use command Applies pipefail safety (returns the exit status of the last command to fail, not just the final command).
+- The config file ([.config](museum_fastq2bam.config)) also adds a process-level directive so every job: Runs the dcsrsoft use command Applies pipefail safety (returns the exit status of the last command to fail, not just the final command).
 - Given that we have a new chromosome-level genome assembly, this new version of the pipeline allows not only to select the version of the reference genome for mapping the reads, but also the `assign_sex.py` includes now sex determination based on the new reference genome coverage.
 - Finally the centralized Python environment needed to run some of the processes now is specifically built using the software stack 20241118 (`biopython_20241118`) so it's compatible with that corresponding stack. You just need to make sure you're loading the correct biopython environment version in the `.params.json`.
 
