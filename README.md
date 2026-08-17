@@ -93,7 +93,7 @@ Below you can find the description of the parameters required in the [`museum_fa
 
 |Parameter          | Description                                                                |Example                                   |
 |-------------------|----------------------------------------------------------------------------|------------------------------------------|
-|`input`            |Path to the CSV file listing all `FASTQ` files.                       | [example_fastq.csv](lists/modern.museum_short.reads_2025_4th.samples.Germany.csv)|
+|`input`            |Path to the CSV file listing all `FASTQ` files.                       | [example_input.csv](example_data/example_input.csv)|
 |`bin_dir`          |Path to auxiliary scripts.                                                  |`"${projectDir}/bin"`                       |
 |`result_dir`       |Path to the results directory.                                              |`"/work/user/project/1_Reads2Bam"`         |
 |`scratch_dir`      |Path for intermediate or temporary files.                                   |`"/scratch/user/project/fastq2bam/scratch"` |
