@@ -9,28 +9,41 @@ This workflow evaluates and trims raw illumina reads, identifying `paired-` an `
 
 The pipeline also allows for quality control at each processing step from raw read assessment to the final duplicated-marked bam files, generating comprehensive QC reports and aggregating them via MultiQC.
 
+## New in Version 2.0.0
+- DCSR has updated their software stack, to be able to determine which software stack to use now the parameter file [(_params.json)](museum_fastq2bam_params.json) allows to specify the softstack you require.
+- All processes have been adapted, either in the main.nf or in modules, to call the corresponding software stack.
+- The config file [(.config)](museum_fastq2bam.config) also adds a process-level directive so every job: Runs the dcsrsoft use command Applies pipefail safety (returns the exit status of the last command to fail, not just the final command).
+- Given that we have a new chromosome-level genome assembly, this new version of the pipeline allows not only to select the version of the reference genome for mapping the reads, but also the `assign_sex.py` includes now sex determination based on the new reference genome coverage.
+- Finally the centralized Python environment needed to run some of the processes now is specifically built using the software stack 20241118 (`biopython_20241118`) so it's compatible with that corresponding stack. You just need to make sure you're loading the correct biopython environment version in the `.params.json`.
+
 ## Running the pipeline
 
 ### 1. Environment setup
 
 Before executing the pipeline, ensure your environment is properly configured:
 
-- Nextflow depends on java and it needs to previously load java.
+**1.1. Nextflow depends on java and it needs to previously load java.**
 
 ```bash
 module load openjdk/17.0.8.1_1
 ```
  Note the software version as the default java in cluster is not compatible.
 
-- You can access the centralized Python environment at:
+**1.2. A centralized Python environment is needed:**
+
+Some processes on the pipeline required a byopython environment built using the following [biopython_requirements.txt](bin/biopython_requirements.txt).
+
+The activation of this environment needs to be specified in the `.params.json` and can be access it at:
 
 ```bash
 /work/FAC/FBM/DEE/jgoudet/barn_owl/Common/venv/biopython
+or
+/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/venv/biopython_20241118
 ```
 
 The `biopython` environment includes `pandas`, `Biopython` and `multiqc`. If you don't have access to the shared environment or are running elsewhere:
 
-- Use the `bin/biopython_requirements.txt` file included in this repository.
+- Use the [`biopython_requirements.txt`](bin/biopython_requirements.txt) file included in this repository.
 - Create a local environment with it:
 
 ```bash
@@ -64,9 +77,13 @@ Path to the reference genome's `FASTA` file, where all the corresponding indexes
 
 File containing a list of library adapters to remove using `trimmomatic`. See the [trimming](#53-trimming) section for more details.
 
-#### 2.4 Scaffolds file
+#### 2.4 Linkage groups bed file
+Depending on the version of the reference genome you would need either a [scaffolds bed file](lists/lg_scaffolds.bed) or a [chromosome bed file](lists/father_chr.bed).
 
-The [scaffolds bed file](lists/lg_scaffolds.bed) provided to `qualimap` consists of scaffolds from the 40 linkage groups identified in [Topaloudis *et al*., 2025](https://doi.org/10.1093/genetics/iyae190). This BED file enables assessment of coverage distribution across these genomic segments.
+This BED file is provided to `qualimap` to enable assessment of coverage distribution across these genomic segments.
+
+Scaffolds consist on the 40 linkage groups identified in [Topaloudis *et al*., 2025](https://doi.org/10.1093/genetics/iyae190).
+Chromosomes are defined in the [REF]
 
 ### 3. Parameters
 
@@ -83,6 +100,7 @@ Below you can find the description of the parameters required in the [`museum_fa
 |`work_dir`         |Path to NF's `work` directory. Set to `/scratch/` partition for faster I/O. |`"/scratch/user/project/fastq2bam/work"`|
 |`report_dir`       |Path to publish pipeline reports.                                           |`"/work/user/project/1_Reads2Bam/fastq2bam_report"`|
 |`enable_reports`   |If `true`, generate NF report, trace and dag image.                         |`true` |
+|`softstack`   |DCSR's software stack. Use `20241118` for compatibility with tool versions.                         |`"20241118"` |
 |`publish`          |The file publishing mode (NF parameter). Usually set to `copy`.             |`"copy"`            |
 |`run_id`       |Sequencing run identifier.                                                  |`"Germany_2025_4th"` |
 |`python`           |Select version in DCSR's software stack.                                    |`"python/3.12.1"`|
@@ -96,18 +114,18 @@ Below you can find the description of the parameters required in the [`museum_fa
 |`qualimap`         |Select version in DCSR's software stack.                                    |`qualimap/2.2.1"`|
 |`bcftools`         |Select version in DCSR's software stack.                                    |`"bcftools/1.21"`|
 |`htslib`         |Select version in DCSR's software stack.                                     |`"htslib/1.21"`|
-|`python_venv`      |Path to the pipeline's Python virtual environment.                         |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/venv/biopython/bin/activate"`|
+|`python_venv`      |Path to the pipeline's Python virtual environment.                         |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/venv/biopython_20241118/bin/activate"`|
 |`phred`            |`trimmomatic`: base quality encoding.                                      |`"phred33"`|
-|`illumina_adapters`|`trimmomatic`: path to Illumina adapters.                                  |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/apulido/TOOLS/adapters/TruSeq3_NOVOGENE.fa"`|
+|`illumina_adapters`|`trimmomatic`: path to Illumina adapters.                                  |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/museum_mapping_refGenome2026/adapters/TruSeq3_NOVOGENE.fa"`|
 |`illumina_clipping`|`trimmomatic`: [clipping parameters](#53-trimming).                           |`"2:30:10:3:70:true"`|
 |`min_read_length`  |`trimmomatic`: minimum read length.                                          |`"70"`|
-|`ref_genome`       |`bwa`: path to the reference genome FASTA.                                 |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/ref_genome_2020/Tyto_reference_Jan2020.fasta"`|
-|`ref_genome_version` |`sex_assignment`: version of the genome assembly selected                                  | `"2020"`|
+|`ref_genome`       |`bwa`: path to the reference genome FASTA.                                 |`"/work/FAC/FBM/DEE/jgoudet/barn_owl/Common/museum_mapping_refGenome2026/father_ref_genome_2026/Final_FatherAssembly.fa"`|
+|`ref_genome_version` |`sex_assignment`: version of the genome assembly selected                                  | `"2026"`|
 |`RG_PL`            |`samtools addreplacerg`: sequencing platform.                                |`"ILLUMINA"`|
 |`RG_CN`            |`samtools addreplacerg`: sequencing center.                                |`"NOVOGENE"`|
 |`RG_PM`            |`samtools addreplacerg`: sequencing platform model.                          |`"NovaSeqXPlus"`|
 |`qualimap_windows` |`qualimap bamqc -nw`: number of windows.                                   |`"1000"`|
-|`qualimap_bed`     |`qualimap bamqc -gff`: path to feature file.                               |[lg_scaffolds.bed](lists/lg_scaffolds.bed)|
+|`qualimap_bed`     |`qualimap bamqc -gff`: path to feature file.                               |[chr.bed](lists/father_chr.bed)|
 |`account`          |Cluster account name (`jgoudet_barn_owl`).                                       |`"jgoudet_barn_owl"`|
 |`email`            |Mail for SLURM notifications.                                              |`"angelica.pulido@unil.ch"`|
 
@@ -314,9 +332,9 @@ Sex determination can be infered computationally using genomic coverage statisti
 
 The script requires two inputs: **(1)** coverage statistics generated by `samtools coverage`, and **(2)** a reference genome identifier (e.g., "2020"). When the 2020 genome is specified, the script calculates the mean coverage depth of the sex chromosome (scaffold 13) relative to autosomes (excluding scaffold 42). Females are identified by a lower sex-chromosome coverage ratio (expected ~0.5X due to ZZ/ZW heterogamety), while males show roughly equal coverage (homogametic, ~1X). The **current threshold is set to 0.65**, following analyses for sexing low coverage individuals in Eleonor's thesis (p. 274). Scaffold 42 is excluded from calculations due to its pseudoautosomal region (PAR), which could skew coverage-based sex determination.
 
-The script outputs a tab-delimited file (SAMPLE\tSEX) for each individual. 
+When the 2026 reference genome is specified, the script uses the `Fa_chrZ` to calculte the mean coverage of the sex chromosome and compare it with mean autosomal coverage. In this case the **threshold of the ration is set to 0.7**.
 
-💡 Future updates to the reference genome  will require modifications to the script. This includes adding new reference genome identifiers (e.g., "2025") and adjusting chromosome or scaffold names if they differ from the 2020 assembly. The logic for sex determination, however, will remain consistent—only the genomic coordinates and thresholds may need refinement.
+The script outputs a tab-delimited file (SAMPLE\tSEX) for each individual. 
 
 #### 5.10. BAM List Output
 
@@ -328,7 +346,7 @@ T.nig.sp.IDN_44282    |  Tn_44282    |    L6   |   Tn_44282_Germany_2025_4th_L6_
 T.jav.del.WSM_23135   |  Tad_23135   |    L7   |   Tad_23135_Germany_2025_4th_L7_marked.bam
 T.fur.pra.DOM_16499   |  Tfp_16499   |    L7   |   Tfp_16499_Germany_2025_4th_L7_marked.bam
 
-This file enables merging of BAMs from the same individual across different lanes, runs, or libraries. In future updates I'll add a script that can take this final list og BAM files and merge bams by `Sample_ID`.
+This file could be used to enables merging of BAMs from the same individual across different lanes, runs, or libraries. In future updates I'll add a script that can take this final list og BAM files and merge bams by `Sample_ID`.
 
 ### Collected metadata for the database
 
