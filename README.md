@@ -346,7 +346,7 @@ T.nig.sp.IDN_44282    |  Tn_44282    |    L6   |   Tn_44282_Germany_2025_4th_L6_
 T.jav.del.WSM_23135   |  Tad_23135   |    L7   |   Tad_23135_Germany_2025_4th_L7_marked.bam
 T.fur.pra.DOM_16499   |  Tfp_16499   |    L7   |   Tfp_16499_Germany_2025_4th_L7_marked.bam
 
-This file could be used to enables merging of BAMs from the same individual across different lanes, runs, or libraries. In future updates I'll add a script that can take this final list og BAM files and merge bams by `Sample_ID`.
+This file could be used to enables merging of BAMs from the same individual across different lanes, runs, or libraries. In future updates I'll add a script that can take this final list of BAM files and merge bams by `Sample_ID`.
 
 ### Collected metadata for the database
 
